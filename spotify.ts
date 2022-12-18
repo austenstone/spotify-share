@@ -135,6 +135,7 @@ export class SpotifyApi {
         redirectUrl.searchParams.append('scope', scope);
         redirectUrl.searchParams.append('redirect_uri', new URL(_req.url).origin + '/callback');
         // redirectUrl.searchParams.append('state', state);
+        console.log(redirectUrl)
         return Response.redirect(redirectUrl);
     }
 
@@ -144,7 +145,9 @@ export class SpotifyApi {
         const state = url.searchParams.get("state") || '';
 
         const clientId = Deno.env.get("SPOTIFY_CLIENT_ID") || "";
+        if (!clientId) return new Response("No client id", { status: 500 });
         const clientSecret = Deno.env.get("SPOTIFY_CLIENT_SECRET") || "";
+        if (!clientSecret) return new Response("No client secret", { status: 500 });
 
         const tokenResponse = await fetch(`${this.baseAccountUrl}/api/token`, {
             method: "POST",
@@ -177,30 +180,30 @@ export class SpotifyApi {
         return response;
     }
 
-    apiRequest(req: Request, url: string, method?: string): Promise<Response> {
-        const maybeAccessToken = getCookies(req.headers)["spotify_token"];
-        if (!maybeAccessToken) {
-            return Promise.reject(new Error("No access token"));
-        }
+    apiRequest(token: string, url: string, method?: string): Promise<Response> {
         return fetch(`${this.baseApiUrl}/${url}`, {
             method: method || "GET",
             headers: {
-                Authorization: `Bearer ${maybeAccessToken}`
+                Authorization: `Bearer ${token}`
             }
         });
     }
 
-    getUserProfile(req: Request): Promise<Response> {
-        return this.apiRequest(req, 'v1/me');
+    getUserProfile(token: string): Promise<Response> {
+        return this.apiRequest(token, 'v1/me');
     }
 
-    search(req: Request, query: string, type: string[], limit: number = 20, offset: number = 0): Promise<Response> {
-        return this.apiRequest(req, `v1/search?${new URLSearchParams({
+    getUserLikes(token: string): Promise<Response> {
+        return this.apiRequest(token, 'v1/me/tracks');
+    }
+
+    search(token: string, query: string, type: string[], limit: number = 20, offset: number = 0): Promise<Response> {
+        return this.apiRequest(token, `v1/search?${new URLSearchParams({
             q: query,
             type: type?.join(','),
             limit: limit.toString(),
             offset: offset.toString(),
-        }).toString()}`);
+        })?.toString()}`);
     }
 }
 
