@@ -1,4 +1,10 @@
-# fresh project
+# Spotify Share
+
+Share your spotify likes with your friends.
+
+1. Click login
+2. Click share
+3. Send the link to your friends
 
 ### Usage
 

@@ -1,5 +1,5 @@
 
-import { getCookies, setCookie } from "https://deno.land/std@0.144.0/http/cookie.ts";
+import { setCookie } from "https://deno.land/std@0.144.0/http/cookie.ts";
 
 export interface SearchResult {
     artists: Artists;
@@ -127,7 +127,7 @@ export class SpotifyApi {
 
     authorizeResponse(_req: Request): Response {
         const clientId = Deno.env.get('SPOTIFY_CLIENT_ID') || '';
-        const scope = 'user-read-private user-read-email';
+        const scope = 'user-read-private user-read-email user-library-read playlist-modify-public';
 
         const redirectUrl = new URL(`${this.baseAccountUrl}/authorize`);
         redirectUrl.searchParams.append('response_type', 'code');
@@ -180,12 +180,17 @@ export class SpotifyApi {
         return response;
     }
 
-    apiRequest(token: string, url: string, method?: string): Promise<Response> {
-        return fetch(`${this.baseApiUrl}/${url}`, {
+    apiRequest(token: string, url: string, method?: string, body?: any): Promise<Response> {
+        return this.rawApiRequest(token, `${this.baseApiUrl}/${url}`, method, body)
+    }
+
+    rawApiRequest(token: string, url: string, method?: string, body?: any): Promise<Response> {
+        return fetch(url, {
             method: method || "GET",
             headers: {
                 Authorization: `Bearer ${token}`
-            }
+            },
+            body: body ? JSON.stringify(body) : undefined,
         });
     }
 
@@ -196,8 +201,43 @@ export class SpotifyApi {
     getUserLikes(token: string): Promise<Response> {
         return this.apiRequest(token, 'v1/me/tracks');
     }
+    
+    getUserPlaylists(token: string): Promise<Response> {
+        return this.apiRequest(token, `v1/me/playlists`);
+    }
 
-    search(token: string, query: string, type: string[], limit: number = 20, offset: number = 0): Promise<Response> {
+    createPlaylist(token: string, userId: string, name: string, description: string, isPublic = true): Promise<Response> {
+        return this.apiRequest(token, `v1/users/${userId}/playlists`, "POST", {
+            name: name,
+            description: description,
+            public: isPublic,
+        });
+    }
+
+    updatePlaylistItems(token: string, playlistId: string, uris: string[], range_start = 0, insert_before = 0, range_length = uris.length): Promise<Response> {
+        return this.apiRequest(token, `v1/playlists/${playlistId}/tracks`, "PUT", {
+            uris: uris,
+            range_start,
+            insert_before,
+            range_length,
+        });
+    }
+
+    async addPlaylistItems(token: string, playlistId: string, uris: string[], position?: number): Promise<boolean> {
+        for (let i = 0; i < uris.length; i += 100) {
+            const uriSlice = uris.slice(i, i + 100);
+            const addPlayListItemsRsp = await this.apiRequest(token, `v1/playlists/${playlistId}/tracks`, "POST", {
+                uris: uriSlice,
+                position,
+            });
+            if (!addPlayListItemsRsp.ok) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    search(token: string, query: string, type: string[], limit = 20, offset = 0): Promise<Response> {
         return this.apiRequest(token, `v1/search?${new URLSearchParams({
             q: query,
             type: type?.join(','),

@@ -35,6 +35,11 @@
     --decorative-subdued: #292929;
 }
 
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
 body {
     background: var(--background-base);
     color: var(--text-base);
@@ -45,4 +50,19 @@ button {
     border-radius: 500px;
     background-color: rgb(29, 185, 84);
     color: rgb(255, 255, 255);
+    outline: none !important;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.04);
+}
+
+.subdued {
+    color: var(--text-subdued);
+}
+
+.hidden {
+    position: absolute;
+    bottom: 0;
 }
