@@ -127,7 +127,7 @@ export class SpotifyApi {
 
     authorizeResponse(_req: Request): Response {
         const clientId = Deno.env.get('SPOTIFY_CLIENT_ID') || '';
-        const scope = 'user-read-private user-read-email user-library-read playlist-modify-public';
+        const scope = 'user-library-read playlist-modify-public';
 
         const redirectUrl = new URL(`${this.baseAccountUrl}/authorize`);
         redirectUrl.searchParams.append('response_type', 'code');
