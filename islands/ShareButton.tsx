@@ -60,18 +60,20 @@ export default function ShareButton(props: ShareButtonProps) {
         })();
 
         setShareButtonText(`Filtering tracks...`)
-        const tracksToAdd = tracks.filter(track => !playlistTracks.find(playlistTrack => playlistTrack.track.id === track.track.id));
+        // const tracksToAdd = tracks.filter(track => !playlistTracks.find(playlistTrack => playlistTrack.track.id === track.track.id));
+        const tracksToAdd = playlistTracks;
 
         setShareButtonText(`Adding ${tracksToAdd.length} tracks...`)
-        const trackUris = tracksToAdd.map(track => track.track.uri);
-        for (let i = 0; i < trackUris.length; i += 100) {
-            const addPlayListItemsRsp = await spotifyApi.apiRequest(props.token, `v1/playlists/${playlist.id}/tracks`, "POST", {
-                uris: trackUris.slice(i, i + 100),
+        const trackUris = tracksToAdd.map(track => track.track.id);
+        for (let i = 0; i < trackUris.length; i++) {
+            const addPlayListItemsRsp = await spotifyApi.apiRequest(props.token, `v1/me/tracks`, "PUT", {
+            ids: [trackUris[i]],
             });
-            setShareButtonText(`Adding tracks... ${Math.ceil(i / trackUris.length * 100)}% - ${i}/${trackUris.length}`)
+            setShareButtonText(`Adding tracks... ${Math.ceil((i + 1) / trackUris.length * 100)}% - ${i + 1}/${trackUris.length}`);
             if (!addPlayListItemsRsp.ok) {
-                return false;
+            return false;
             }
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1000ms
         }
 
         const url = `${playlist.external_urls.spotify}?si=${playlist.id}`;
