@@ -245,6 +245,12 @@ export class SpotifyApi {
             offset: offset.toString(),
         })?.toString()}`);
     }
+
+    deleteItemFromPlaylist(token: string, playlistId: string, uri: string): Promise<Response> {
+        return this.apiRequest(token, `v1/playlists/${playlistId}/tracks`, "DELETE", {
+            tracks: [{ uri: uri }],
+        });
+    }
 }
 
 export const spotifyApi = new SpotifyApi();

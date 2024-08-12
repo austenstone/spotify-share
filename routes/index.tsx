@@ -3,6 +3,7 @@ import { getCookies } from "https://deno.land/std@0.144.0/http/cookie.ts";
 import { spotifyApi } from "../spotify.ts";
 import { Header } from "../components/Header.tsx";
 import ShareButton from "../islands/ShareButton.tsx";
+import LikesComparisonButton from "../islands/LikesComparisonButton.tsx";
 
 export const handler: Handlers = {
   async GET(_req, _ctx) {
@@ -22,7 +23,10 @@ export default function Home({ url, data }: PageProps) {
       <image src="Spotify_Logo_RGB_White.png" class="w-40 absolute top-5 left-5"></image>
       <div class="flex flex-col justify-center items-center w-full h-full p-5">
         {data ? (
-          <ShareButton token={data.token} />
+          <div>
+            <ShareButton token={data.token} />
+            <LikesComparisonButton token={data.token} />
+          </div>
         ) : (
           <a href="/login">
             <button>Log in</button>
