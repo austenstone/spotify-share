@@ -5,7 +5,7 @@ interface ShareButtonProps {
     token: string;
 }
 
-const DEFAULT_PLAYLIST_NAME = 'Liked Songs';
+const DEFAULT_PLAYLIST_NAME = 'BACKUP';
 const DEFAULT_PLAYLIST_DESCRIPTION = 'Your liked songs from Spotify'
 
 export default function ShareButton(props: ShareButtonProps) {
@@ -60,16 +60,17 @@ export default function ShareButton(props: ShareButtonProps) {
         })();
 
         setShareButtonText(`Filtering tracks...`)
-        // const tracksToAdd = tracks.filter(track => !playlistTracks.find(playlistTrack => playlistTrack.track.id === track.track.id));
-        const tracksToAdd = playlistTracks;
+        const tracksToAdd = playlistTracks.filter(track => !tracks.find(t => t.track.id === track.track.id));
 
         setShareButtonText(`Adding ${tracksToAdd.length} tracks...`)
+        // reverse tracksToAdd so that the first track is added last
+        tracksToAdd.reverse();
         const trackUris = tracksToAdd.map(track => track.track.id);
         for (let i = 0; i < trackUris.length; i++) {
             const addPlayListItemsRsp = await spotifyApi.apiRequest(props.token, `v1/me/tracks`, "PUT", {
-            ids: [trackUris[i]],
+                ids: [trackUris[i]],
             });
-            setShareButtonText(`Adding tracks... ${Math.ceil((i + 1) / trackUris.length * 100)}% - ${i + 1}/${trackUris.length}`);
+            setShareButtonText(`Adding tracks... ${Math.ceil((i + 1) / trackUris.length)}% - ${i + 1}/${trackUris.length}`);
             if (!addPlayListItemsRsp.ok) {
             return false;
             }
